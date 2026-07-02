@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jyoti — Astrologer Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --night: #16182e;
+    --night-2: #1f2242;
+    --brass: #cba14a;
+    --brass-soft: #e4cd8f;
+    --parchment: #f7f3ea;
+    --card: #ffffff;
+    --ink: #1c1f30;
+    --muted: #71768c;
+    --line: #e7e2d6;
+    --jade: #2f7d6b;
+    --jade-bg: #e6f1ed;
+    --amber: #c25b3a;
+    --amber-bg: #fbeae2;
+    --shadow: 0 1px 2px rgba(22,24,46,.06), 0 8px 24px rgba(22,24,46,.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--parchment);
+    color: var(--ink);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--parchment); position: relative; padding-bottom: 88px; }
+
+  /* Header */
+  header {
+    background: radial-gradient(120% 140% at 85% -10%, var(--night-2) 0%, var(--night) 60%);
+    color: #fff; padding: 20px 20px 22px; position: relative; overflow: hidden;
+  }
+  header .stars { position: absolute; inset: 0; opacity: .5; }
+  header .stars i { position: absolute; width: 2px; height: 2px; background: var(--brass-soft); border-radius: 50%; }
+  .brand { display: flex; align-items: center; gap: 11px; position: relative; z-index: 1; }
+  .mark {
+    width: 38px; height: 38px; flex: none; border-radius: 50%;
+    border: 1.5px solid var(--brass); display: grid; place-items: center;
+  }
+  .mark svg { width: 22px; height: 22px; }
+  .brand h1 { font-family: 'Marcellus', serif; font-size: 21px; font-weight: 400; letter-spacing: .5px; }
+  .brand .sub { font-size: 12px; color: var(--brass-soft); letter-spacing: .3px; }
+  .daystat { display: flex; gap: 18px; margin-top: 18px; position: relative; z-index: 1; }
+  .daystat div { display: flex; flex-direction: column; }
+  .daystat .n { font-family: 'Marcellus', serif; font-size: 23px; line-height: 1; }
+  .daystat .l { font-size: 11px; color: #b9bcd6; text-transform: uppercase; letter-spacing: .7px; margin-top: 5px; }
+  .daystat .n em { font-style: normal; color: var(--brass); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; padding: 12px 12px 0; background: var(--parchment); position: sticky; top: 0; z-index: 5; }
+  .tabs button {
+    flex: 1; border: none; background: transparent; font-family: inherit; font-size: 13px; font-weight: 600;
+    color: var(--muted); padding: 10px 4px 12px; cursor: pointer; border-bottom: 2px solid transparent; position: relative;
+  }
+  .tabs button .badge {
+    display: inline-block; min-width: 18px; height: 18px; line-height: 18px; padding: 0 4px; margin-left: 5px;
+    background: var(--amber); color: #fff; font-size: 11px; border-radius: 9px; vertical-align: 1px;
+  }
+  .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--brass); }
+  .tabs button:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; border-radius: 4px; }
+
+  main { padding: 14px 14px 0; }
+  .sectionhint { font-size: 12.5px; color: var(--muted); margin: 2px 4px 12px; }
+
+  /* Card */
+  .req { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); margin-bottom: 12px; overflow: hidden; }
+  .req .top { display: flex; align-items: flex-start; gap: 12px; padding: 14px 15px 12px; }
+  .avatar { width: 40px; height: 40px; flex: none; border-radius: 50%; background: var(--night); color: var(--brass-soft); display: grid; place-items: center; font-family: 'Marcellus', serif; font-size: 16px; }
+  .who { flex: 1; min-width: 0; }
+  .who .name { font-weight: 600; font-size: 15px; }
+  .who .phone { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .pill { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+  .pill.new { background: var(--night); color: var(--brass-soft); }
+  .pill.wait { background: var(--amber-bg); color: var(--amber); }
+  .pill.paid { background: var(--jade-bg); color: var(--jade); }
+  .pill.dead { background: #eee; color: #8a8a8a; }
+
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 8px; padding: 0 15px 13px; }
+  .chip { font-size: 12px; color: var(--ink); background: var(--parchment); border: 1px solid var(--line); padding: 4px 10px; border-radius: 8px; display: inline-flex; align-items: center; gap: 5px; }
+  .chip svg { width: 13px; height: 13px; opacity: .6; }
+  .chip.lang { background: #f0ece0; }
+
+  .divider { height: 1px; background: var(--line); }
+  .actionbar { padding: 12px 15px; }
+
+  .btn { font-family: inherit; font-weight: 600; font-size: 14px; border-radius: 10px; border: 1px solid transparent; padding: 11px 14px; cursor: pointer; transition: filter .15s, background .15s; }
+  .btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--night); color: #fff; width: 100%; }
+  .btn-primary:hover { filter: brightness(1.15); }
+  .btn-ghost { background: transparent; color: var(--muted); border-color: var(--line); }
+  .btn-ghost:hover { background: var(--parchment); }
+  .btn-pay { background: var(--jade); color: #fff; width: 100%; }
+  .btn-pay:hover { filter: brightness(1.08); }
+  .row2 { display: flex; gap: 9px; }
+  .row2 .btn-ghost { flex: 0 0 40%; }
+  .row2 .btn-primary { flex: 1; width: auto; }
+
+  /* price setter */
+  .priceset { display: none; padding: 12px 15px 14px; background: var(--parchment); border-top: 1px solid var(--line); }
+  .priceset.show { display: block; }
+  .priceset label { font-size: 12px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 7px; }
+  .priceinput { display: flex; align-items: center; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; overflow: hidden; margin-bottom: 10px; }
+  .priceinput span { padding: 0 12px; font-size: 17px; color: var(--muted); font-family: 'Marcellus', serif; border-right: 1px solid var(--line); align-self: stretch; display: flex; align-items: center; }
+  .priceinput input { flex: 1; border: none; outline: none; font: inherit; font-size: 17px; font-weight: 600; padding: 11px 12px; font-variant-numeric: tabular-nums; }
+  .quick { display: flex; gap: 7px; margin-bottom: 12px; }
+  .quick button { flex: 1; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 8px 0; cursor: pointer; }
+  .quick button:hover { border-color: var(--brass); }
+
+  /* awaiting payment */
+  .awaiting { padding: 12px 15px 14px; background: var(--amber-bg); border-top: 1px solid #f2d9cc; }
+  .awaiting .line1 { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+  .awaiting .amt { font-family: 'Marcellus', serif; font-size: 20px; color: var(--ink); }
+  .countdown { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 15px; color: var(--amber); }
+  .awaiting .note { font-size: 12px; color: #9a5a3f; margin-bottom: 11px; }
+
+  /* paid state */
+  .confirmed { padding: 12px 15px 14px; background: var(--jade-bg); border-top: 1px solid #cfe6de; }
+  .confirmed .line1 { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .confirmed .amt { font-family: 'Marcellus', serif; font-size: 18px; color: var(--jade); }
+  .confirmed .meetlink { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #cfe6de; border-radius: 9px; padding: 9px 11px; font-size: 12.5px; color: var(--ink); word-break: break-all; }
+  .confirmed .meetlink svg { width: 15px; height: 15px; flex: none; color: var(--jade); }
+  .sent-tag { font-size: 11.5px; color: var(--jade); margin-top: 8px; display: flex; align-items: center; gap: 5px; }
+
+  .expired-note { padding: 12px 15px 14px; background: #f3f2ef; border-top: 1px solid var(--line); font-size: 12.5px; color: #8a8a8a; }
+
+  /* schedule */
+  .slot { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 13px 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 13px; box-shadow: var(--shadow); }
+  .slot .time { font-family: 'Marcellus', serif; font-size: 16px; text-align: center; min-width: 62px; }
+  .slot .time small { display: block; font-family: 'Inter'; font-size: 11px; color: var(--muted); font-weight: 600; }
+  .slot .vl { width: 1px; align-self: stretch; background: var(--line); }
+  .slot .s-who { flex: 1; }
+  .slot .s-who b { font-size: 14px; }
+  .slot .s-who span { display: block; font-size: 12px; color: var(--muted); }
+  .join { font-size: 12.5px; font-weight: 600; color: var(--jade); text-decoration: none; padding: 7px 12px; border: 1px solid #cfe6de; border-radius: 8px; }
+
+  /* availability */
+  .availcard { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 6px 4px; }
+  .dayrow { display: flex; align-items: center; padding: 11px 13px; border-bottom: 1px solid var(--line); }
+  .dayrow:last-child { border-bottom: none; }
+  .dayrow .dname { width: 46px; font-weight: 600; font-size: 13px; }
+  .dayrow .slots { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; }
+  .tslot { font-size: 12px; padding: 5px 10px; border-radius: 7px; border: 1px solid var(--line); background: #fff; color: var(--muted); cursor: pointer; user-select: none; font-variant-numeric: tabular-nums; }
+  .tslot.on { background: var(--night); color: var(--brass-soft); border-color: var(--night); }
+  .avail-hint { font-size: 12px; color: var(--muted); text-align: center; padding: 14px 20px 6px; }
+
+  .empty { text-align: center; color: var(--muted); font-size: 13.5px; padding: 40px 30px; }
+  .empty svg { width: 34px; height: 34px; opacity: .35; margin-bottom: 10px; }
+
+  /* toast */
+  .toast { position: fixed; left: 50%; bottom: 104px; transform: translateX(-50%) translateY(20px); background: var(--night); color: #fff; font-size: 13px; font-weight: 500; padding: 11px 18px; border-radius: 30px; box-shadow: 0 8px 30px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: all .28s cubic-bezier(.2,.8,.2,1); z-index: 40; max-width: 90%; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* bottom bar */
+  .demonote { position: fixed; bottom: 0; left: 0; right: 0; background: var(--night); color: #b9bcd6; font-size: 11.5px; text-align: center; padding: 9px 16px; z-index: 30; }
+  .demonote b { color: var(--brass-soft); font-weight: 600; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  section[hidden] { display: none; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="stars" id="stars"></div>
+    <div class="brand">
+      <div class="mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#cba14a" stroke-width="1.4">
+          <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.3"/>
+          <path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Jyoti</h1>
+        <div class="sub">Pandit Sharma · Console</div>
+      </div>
+    </div>
+    <div class="daystat">
+      <div><span class="n"><em id="stat-new">1</em></span><span class="l">New requests</span></div>
+      <div><span class="n" id="stat-today">2</span><span class="l">Today's sittings</span></div>
+      <div><span class="n">₹<span id="stat-earn">500</span></span><span class="l">Confirmed today</span></div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="requests">Requests <span class="badge" id="reqBadge">1</span></button>
+    <button role="tab" aria-selected="false" data-tab="schedule">Schedule</button>
+    <button role="tab" aria-selected="false" data-tab="availability">Availability</button>
+  </nav>
+
+  <main>
+    <!-- REQUESTS -->
+    <section id="requests">
+      <p class="sectionhint">Approve a request and set its price. The customer pays you directly by UPI, then you mark it paid — the Meet link goes out on WhatsApp automatically.</p>
+      <div id="reqList"></div>
+    </section>
+
+    <!-- SCHEDULE -->
+    <section id="schedule" hidden>
+      <p class="sectionhint">Paid and confirmed sittings. Join links open Google Meet.</p>
+      <div id="schedList"></div>
+    </section>
+
+    <!-- AVAILABILITY -->
+    <section id="availability" hidden>
+      <p class="sectionhint">Tap to turn slots on or off. Customers booking on WhatsApp see only the times you switch on — plus a "request another time" option.</p>
+      <div class="availcard" id="availCard"></div>
+      <p class="avail-hint">A tapped-on slot is offered to customers. Once someone books it, it's held for them until they pay or the request expires.</p>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <div class="demonote">Prototype with sample data · <b>no live WhatsApp / payments yet</b></div>
+</div>
+
+<script>
+/* ---------- sample data ---------- */
+let requests = [
+  { id: 1, name: "Priya Murugan", phone: "+91 98••• ••210", initial: "P",
+    date: "Tomorrow", time: "4:00 PM", lang: "Tamil", topic: "Career reading",
+    status: "new" },
+  { id: 2, name: "Ramesh Kumar", phone: "+91 90••• ••887", initial: "R",
+    date: "Today", time: "6:30 PM", lang: "Hindi", topic: "Marriage matching",
+    status: "await", price: 300, deadline: Date.now() + 26*60*1000 + 12*1000 },
+  { id: 3, name: "Anitha Selvam", phone: "+91 73••• ••145", initial: "A",
+    date: "Today", time: "3:00 PM", lang: "Tamil", topic: "Muhurtham",
+    status: "paid", price: 500, meet: "meet.google.com/xqp-mdrk-avz" },
+  { id: 4, name: "Vikram Teja", phone: "+91 96••• ••032", initial: "V",
+    date: "Today", time: "1:00 PM", lang: "English", topic: "General",
+    status: "expired", price: 400 }
+];
+
+const svgClock='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const svgCal='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/></svg>';
+const svgTag='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3h6a2 2 0 0 1 2 2v6l-9 9-8-8z"/><circle cx="16" cy="8" r="1.3" fill="currentColor" stroke="none"/></svg>';
+const svgVideo='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg>';
+const svgCheck='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12l5 5L20 6"/></svg>';
+
+/* ---------- render requests ---------- */
+function renderRequests() {
+  const list = document.getElementById('reqList');
+  const active = requests.filter(r => r.status !== 'paid');
+  if (!active.length) {
+    list.innerHTML = '<div class="empty">'+svgClock+'<div>No open requests. New bookings from WhatsApp land here.</div></div>';
+  } else {
+    list.innerHTML = active.map(cardHTML).join('');
+  }
+  const newCount = requests.filter(r => r.status === 'new').length;
+  const badge = document.getElementById('reqBadge');
+  badge.textContent = newCount; badge.style.display = newCount ? '' : 'none';
+  document.getElementById('stat-new').textContent = newCount;
+  const paidCount = requests.filter(r => r.status === 'paid').length;
+  document.getElementById('stat-today').textContent = paidCount;
+  const earn = requests.filter(r => r.status === 'paid').reduce((s,r)=>s+(r.price||0),0);
+  document.getElementById('stat-earn').textContent = earn;
+}
+
+function cardHTML(r) {
+  const head = `
+    <div class="top">
+      <div class="avatar">${r.initial}</div>
+      <div class="who"><div class="name">${r.name}</div><div class="phone">${r.phone}</div></div>
+      ${pill(r.status)}
+    </div>
+    <div class="meta">
+      <span class="chip">${svgCal}${r.date}, ${r.time}</span>
+      <span class="chip lang">${r.lang}</span>
+      <span class="chip">${r.topic}</span>
+    </div>`;
+
+  if (r.status === 'new') {
+    return `<div class="req" id="req-${r.id}">${head}<div class="divider"></div>
+      <div class="actionbar"><div class="row2">
+        <button class="btn btn-ghost" onclick="decline(${r.id})">Decline</button>
+        <button class="btn btn-primary" onclick="openPrice(${r.id})">Approve & set price</button>
+      </div></div>
+      <div class="priceset" id="ps-${r.id}">
+        <label>Consultation price for this sitting</label>
+        <div class="priceinput"><span>₹</span><input type="number" inputmode="numeric" id="pi-${r.id}" placeholder="0" min="0"></div>
+        <div class="quick">
+          <button onclick="setQuick(${r.id},200)">₹200</button>
+          <button onclick="setQuick(${r.id},350)">₹350</button>
+          <button onclick="setQuick(${r.id},500)">₹500</button>
+        </div>
+        <button class="btn btn-primary" onclick="confirmApprove(${r.id})">Approve & send price on WhatsApp</button>
+      </div></div>`;
+  }
+  if (r.status === 'await') {
+    return `<div class="req" id="req-${r.id}">${head}
+      <div class="awaiting">
+        <div class="line1"><span class="amt">₹${r.price}</span><span class="countdown" id="cd-${r.id}">--:--</span></div>
+        <div class="note">Price sent. Waiting for payment — expires when the timer ends.</div>
+        <button class="btn btn-pay" onclick="markPaid(${r.id})">Mark payment received</button>
+      </div></div>`;
+  }
+  if (r.status === 'expired') {
+    return `<div class="req" id="req-${r.id}">${head}
+      <div class="expired-note">Request expired — payment not received in time. The slot has been released. Customer was told they can rebook.</div></div>`;
+  }
+  return '';
+}
+
+function pill(s){
+  if(s==='new') return '<span class="pill new">New</span>';
+  if(s==='await') return '<span class="pill wait">Awaiting payment</span>';
+  if(s==='paid') return '<span class="pill paid">Confirmed</span>';
+  if(s==='expired') return '<span class="pill dead">Expired</span>';
+  return '';
+}
+
+/* ---------- actions ---------- */
+function openPrice(id){
+  const ps = document.getElementById('ps-'+id);
+  ps.classList.toggle('show');
+  if(ps.classList.contains('show')) document.getElementById('pi-'+id).focus();
+}
+function setQuick(id,v){ document.getElementById('pi-'+id).value = v; }
+function decline(id){
+  requests = requests.filter(r=>r.id!==id);
+  renderRequests(); toast('Request declined — customer notified');
+}
+function confirmApprove(id){
+  const val = parseInt(document.getElementById('pi-'+id).value,10);
+  if(!val || val<=0){ toast('Enter a price first'); document.getElementById('pi-'+id).focus(); return; }
+  const r = requests.find(r=>r.id===id);
+  r.status='await'; r.price=val;
+  // 30-minute minimum pay window (prototype uses the 30-min floor)
+  r.deadline = Date.now() + 30*60*1000;
+  renderRequests(); toast('₹'+val+' sent to '+r.name.split(' ')[0]+' on WhatsApp');
+}
+function markPaid(id){
+  const r = requests.find(r=>r.id===id);
+  r.status='paid';
+  r.meet = 'meet.google.com/'+rand()+'-'+rand()+'-'+rand().slice(0,3);
+  renderRequests(); renderSchedule();
+  toast('Payment confirmed — Meet link sent on WhatsApp');
+}
+function rand(){ return Math.random().toString(36).slice(2,6); }
+
+/* ---------- countdown timers ---------- */
+function tick(){
+  requests.filter(r=>r.status==='await').forEach(r=>{
+    const el = document.getElementById('cd-'+r.id);
+    if(!el) return;
+    let left = Math.floor((r.deadline - Date.now())/1000);
+    if(left<=0){
+      r.status='expired'; renderRequests(); toast(r.name.split(' ')[0]+"'s request expired — slot released");
+      return;
+    }
+    const m = String(Math.floor(left/60)).padStart(2,'0');
+    const s = String(left%60).padStart(2,'0');
+    el.textContent = m+':'+s;
+    if(left < 300) el.style.color = '#a83a1e';
+  });
+}
+setInterval(tick, 1000);
+
+/* ---------- schedule ---------- */
+function renderSchedule(){
+  const list = document.getElementById('schedList');
+  const paid = requests.filter(r=>r.status==='paid');
+  if(!paid.length){ list.innerHTML='<div class="empty">'+svgVideo+'<div>No confirmed sittings yet. They appear here once payment is marked.</div></div>'; return; }
+  list.innerHTML = paid.map(r=>`
+    <div class="slot">
+      <div class="time">${r.time.replace(' ','<small>')}</small></div>
+      <div class="vl"></div>
+      <div class="s-who"><b>${r.name}</b><span>${r.topic} · ${r.lang}</span></div>
+      <a class="join" href="https://${r.meet}" target="_blank" rel="noopener">Join</a>
+    </div>`).join('');
+}
+
+/* ---------- availability ---------- */
+const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const times = ['10 AM','12 PM','3 PM','4 PM','6 PM','7 PM'];
+let avail = {};
+days.forEach(d=> avail[d] = times.map(t=> ['3 PM','6 PM'].includes(t)) );
+function renderAvail(){
+  document.getElementById('availCard').innerHTML = days.map((d,di)=>`
+    <div class="dayrow"><div class="dname">${d}</div><div class="slots">
+      ${times.map((t,ti)=>`<span class="tslot ${avail[d][ti]?'on':''}" onclick="toggleSlot(${di},${ti})">${t}</span>`).join('')}
+    </div></div>`).join('');
+}
+function toggleSlot(di,ti){ const d=days[di]; avail[d][ti]=!avail[d][ti]; renderAvail(); }
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tabs button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected','false'));
+    b.setAttribute('aria-selected','true');
+    ['requests','schedule','availability'].forEach(id=> document.getElementById(id).hidden = (id!==b.dataset.tab));
+  });
+});
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+/* ---------- starfield ---------- */
+(function(){
+  const s=document.getElementById('stars'); let h='';
+  for(let i=0;i<26;i++){ h+=`<i style="left:${Math.random()*100}%;top:${Math.random()*100}%;opacity:${.2+Math.random()*.6}"></i>`; }
+  s.innerHTML=h;
+})();
+
+renderRequests(); renderSchedule(); renderAvail();
+</script>
+</body>
+</html>
